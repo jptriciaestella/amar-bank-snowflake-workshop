@@ -4,7 +4,7 @@
 dalam bahasa natural — gabungan **Cortex Analyst** (tanya data angka) + **Cortex Search**
 (tanya dokumen/SOP) lewat agent **Snowflake Intelligence**.
 
-> Prasyarat: Session 1 selesai (`GOLD.MART_*` ada). Referensi: `sql/06_cortex_ai.sql`.
+> Prasyarat: Jalankan `sql/05_prereq_day2.sql` (atau Session 1 selesai) → `GOLD.MART_*` ada. Referensi: `sql/06_cortex_ai.sql`.
 
 ---
 

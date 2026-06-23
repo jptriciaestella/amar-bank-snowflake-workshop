@@ -4,7 +4,7 @@
 kontrol kelas enterprise: **masking, row access, projection, data quality (DMF), dan lineage** —
 semuanya **di dalam** Snowflake, di atas tabel dari Session 1.
 
-> Prasyarat: Session 1 selesai (`SILVER.STG_CUSTOMERS` & `GOLD.MART_*` ada).
+> Prasyarat: Jalankan `sql/05_prereq_day2.sql` (atau Session 1 selesai) → `SILVER.STG_CUSTOMERS` & `GOLD.MART_*` ada.
 > Referensi perintah: `sql/03_governance.sql`.
 
 ---

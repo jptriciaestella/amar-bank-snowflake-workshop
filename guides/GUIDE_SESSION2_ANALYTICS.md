@@ -4,7 +4,7 @@
 1. Menjalankan analitik di Snowflake & memahami **performa warehouse** dan **cache**.
 2. **Membangun dashboard Streamlit hanya dengan mengetik perintah ke AI** (tanpa coding manual).
 
-> Prasyarat: Session 1 selesai → tabel `GOLD.MART_LOAN_PERFORMANCE` & `GOLD.MART_CUSTOMER_360` sudah ada.
+> Prasyarat: Jalankan `sql/05_prereq_day2.sql` (atau Session 1 selesai) → tabel `GOLD.MART_LOAN_PERFORMANCE` & `GOLD.MART_CUSTOMER_360` sudah ada.
 
 ---
 
@@ -107,58 +107,96 @@ interaktif **hanya dengan mengetik permintaan ke AI** di dalam Snowflake.
 ## B.3 Prompt siap copy-paste
 
 Ketik/paste prompt berikut **satu per satu** ke asisten AI. Setelah tiap prompt, klik
-**Run** untuk melihat hasilnya di preview.
+**Run** untuk melihat hasilnya di preview. Tujuannya: membuat dashboard **profesional
+berkualitas Looker** — bukan demo sederhana.
 
-### Prompt 1 — Kerangka & koneksi data
+### Prompt 1 — Kerangka, koneksi data & styling profesional
 ```
-Buatkan aplikasi Streamlit-in-Snowflake untuk dashboard portofolio pinjaman Amar Bank.
+Buatkan aplikasi Streamlit-in-Snowflake dashboard portofolio pinjaman Amar Bank.
 Gunakan get_active_session() dari snowflake.snowpark.context untuk koneksi.
 Ambil data dari dua tabel:
 - AMAR_WORKSHOP.GOLD.MART_LOAN_PERFORMANCE
 - AMAR_WORKSHOP.GOLD.MART_CUSTOMER_360
-Beri judul "Amar Bank - Loan Portfolio Dashboard" dan caption bahwa data ini sintetis.
-Gunakan @st.cache_data agar query tidak diulang terus.
+
+Styling:
+- layout="wide", page_title="Amar Bank — Portfolio Intelligence", page_icon="🏦"
+- Tambahkan custom CSS: sidebar dengan gradient gelap (dark navy #1a1a2e ke #0f3460),
+  dan card KPI dengan gradient background (ungu-biru #667eea ke #764ba2, putih teks,
+  rounded corners, box-shadow). Buat class .metric-card, .metric-card-green, .metric-card-orange.
+- Gunakan @st.cache_data(ttl=600) untuk fungsi query.
 ```
 
-### Prompt 2 — Baris KPI
+### Prompt 2 — Sidebar filter & 5 KPI cards
 ```
-Tambahkan 4 kartu metrik (st.metric) dalam satu baris kolom:
-1. Total Loans = jumlah baris MART_LOAN_PERFORMANCE
-2. NPL Rate = rata-rata kolom IS_DEFAULT dikali 100, format persen
-3. Total Outstanding = total kolom OUTSTANDING, tampilkan dalam miliar Rupiah
-4. Total Customers = jumlah baris MART_CUSTOMER_360
+Tambahkan sidebar dengan:
+- Logo placeholder (atau teks "🏦 Amar Bank")
+- 3 selectbox filter: Product Segment, Province, DPD Bucket (masing-masing ada opsi "All")
+- Caption "Data sintetis untuk workshop"
+
+Di body utama, tampilkan 5 KPI cards (pakai st.markdown + HTML div class metric-card):
+1. Total Loans (format ribuan)
+2. NPL Rate (rata-rata IS_DEFAULT * 100, format persen, card oranye)
+3. Total Outstanding (format "Rp X.XB", card hijau)
+4. Total Customers (card biru)
+5. Avg Collection Rate (rata-rata COLLECTION_RATIO * 100, card hijau)
+
+Semua KPI harus responsive terhadap filter sidebar.
 ```
 
-### Prompt 3 — Grafik portofolio per produk
+### Prompt 3 — Tab Portfolio Overview (bar + donut + tabel)
 ```
-Tambahkan tab "Portfolio". Di dalamnya buat bar chart outstanding per PRODUCT_SEGMENT
-dari MART_LOAN_PERFORMANCE, dan tampilkan juga tabel ringkasan berisi jumlah pinjaman,
-total outstanding, dan NPL rate per segmen.
+Buat 4 tabs: "📊 Portfolio Overview", "⚠️ Risk & DPD Analysis", "👥 Customer 360", "📈 Trend & Collection".
+
+Di tab Portfolio Overview:
+- Layout 2 kolom (3:2 ratio)
+- Kiri: bar chart Outstanding per PRODUCT_SEGMENT, pakai Altair mark_bar dengan cornerRadius,
+  warna gradient palette ["#667eea", "#764ba2", "#f5576c", "#4facfe", "#38ef7d"].
+  Tooltip: segment, jumlah loan, outstanding, NPL rate.
+- Kanan: donut chart (mark_arc innerRadius=55) komposisi jumlah pinjaman per segment.
+- Bawah: dataframe tabel ringkasan per segment (loans, outstanding billions, NPL %, avg plafond).
 ```
 
-### Prompt 4 — Grafik risiko (DPD)
+### Prompt 4 — Tab Risk & DPD Analysis (bar + donut + heatmap)
 ```
-Tambahkan tab "Risk / DPD". Buat pie/donut chart yang menampilkan jumlah pinjaman
-per DPD_BUCKET dari MART_LOAN_PERFORMANCE.
-```
-
-### Prompt 5 — Analisis nasabah per provinsi + filter interaktif
-```
-Tambahkan tab "Customer 360". Buat bar chart jumlah nasabah per PROVINCE dari
-MART_CUSTOMER_360, urut dari terbanyak. Tambahkan st.selectbox untuk memfilter
-berdasarkan SEGMENT (Tunaiku, Senyumku, SMB) yang memengaruhi seluruh chart di tab ini.
+Di tab Risk & DPD Analysis:
+- 2 kolom: kiri bar chart jumlah pinjaman per DPD_BUCKET (urut: CURRENT, DPD_1_30, DPD_31_60,
+  DPD_61_90, DPD_90_PLUS), warna hijau→kuning→oranye→merah (gradient risiko).
+- Kanan: donut chart outstanding per DPD_BUCKET.
+- Bawah: heatmap (mark_rect) Product Segment vs DPD Bucket, warna intensitas = jumlah loans
+  (color scheme "blues").
 ```
 
-### Prompt 6 — Mempercantik
+### Prompt 5 — Tab Customer 360 (horizontal bar + pie + histogram)
 ```
-Rapikan tampilan: gunakan layout wide, beri ikon emoji pada judul tiap section,
-dan beri warna berbeda untuk tiap kategori pada chart.
+Di tab Customer 360:
+- 2 kolom (3:2). Kiri: horizontal bar chart top 15 provinces by customer count,
+  urut descending, warna scheme "purples".
+- Kanan atas: donut chart segmen nasabah (Tunaiku/Senyumku/SMB).
+- Kanan bawah: histogram credit_score (bin=20), warna ungu semi-transparan.
+```
+
+### Prompt 6 — Tab Trend & Collection + footer
+```
+Di tab Trend & Collection:
+- Kiri: bar chart Avg Collection Ratio % per Product Segment, tambahkan garis merah putus-putus
+  di y=100% sebagai target line (alt.Chart rule).
+- Kanan: area chart disbursement volume (Miliar Rp) per bulan dari kolom DISBURSED_AT
+  (extract month), pakai gradient fill transparan.
+- Bawah: st.metric per segment untuk rata-rata late payments & max days late.
+
+Tambahkan footer di paling bawah: centered, warna abu, teks
+"🏦 Amar Bank Portfolio Intelligence · Built with Streamlit-in-Snowflake · Data: Synthetic"
 ```
 
 👀 **Yang harus dilihat di tiap langkah:**
-- Setelah Prompt 1–2: judul + 4 kartu KPI muncul (Total Loans, NPL Rate, dst).
-- Setelah Prompt 3–5: muncul 3 tab dengan grafik batang, donut, dan filter dropdown.
-- Filter SEGMENT mengubah grafik secara **interaktif** — inilah kekuatan Streamlit.
+- Setelah Prompt 1–2: sidebar gelap + 5 KPI cards berwarna (gradient) + filter interaktif.
+- Setelah Prompt 3–4: 4 tab profesional — bar chart dengan rounded corners, donut chart,
+  heatmap, tooltip kaya informasi.
+- Setelah Prompt 5–6: area chart, histogram, late-payment metrics, footer.
+- Semua chart merespons filter sidebar — **interaktif seperti Looker/Tableau**.
+
+> 💡 **Pesan untuk audiens:** Dashboard ini dibangun 100% lewat prompt AI, berjalan
+> di dalam Snowflake (data tidak keluar), dan hasilnya setara BI tools komersial.
 
 ## B.4 Menyimpan & membagikan
 
@@ -167,9 +205,9 @@ dan beri warna berbeda untuk tiap kategori pada chart.
 
 👀 **Yang harus dilihat:** app tersimpan & bisa dibuka ulang dari Projects → Streamlit.
 
-> 💡 **Pesan kunci ke customer:** "Dari nol sampai dashboard interaktif **tanpa menulis
-> kode manual** — cukup memberi instruksi ke AI, dan semuanya berjalan **di dalam**
-> Snowflake (data tidak keluar)."
+> 💡 **Pesan kunci ke customer:** "Dari nol sampai dashboard interaktif berkualitas Looker
+> **tanpa menulis kode manual** — cukup memberi instruksi ke AI, dan semuanya berjalan
+> **di dalam** Snowflake (data tidak keluar). Hasilnya bisa langsung di-share ke tim."
 
 ---
 

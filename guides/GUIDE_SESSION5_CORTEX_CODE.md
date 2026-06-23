@@ -4,7 +4,7 @@
 bayar) **dengan bantuan AI coding assistant (Cortex Code)** — Anda memberi instruksi,
 AI menuliskan & menjalankan kodenya. Cocok untuk yang belum mahir Python/ML.
 
-> Prasyarat: Session 1 selesai (`GOLD.MART_CUSTOMER_360` ada).
+> Prasyarat: Jalankan `sql/05_prereq_day2.sql` (atau Session 1 selesai) → `GOLD.MART_CUSTOMER_360` ada.
 > Target prediksi: kolom **`EVER_DEFAULT`** (1 = pernah gagal bayar, 0 = tidak).
 
 ---
